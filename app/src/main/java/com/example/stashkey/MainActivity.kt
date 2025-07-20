@@ -42,14 +42,18 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
 
 class MainActivity : ComponentActivity() {
 
+    private var currentUsername: String? = null
+    private var currentPassword: String? = null
+    private var vault: Vault? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             StashKeyTheme {
-                var vault by remember { mutableStateOf<Vault?>(null) }
+                var vaultState by remember { mutableStateOf<Vault?>(null) }
 
-                if (vault == null) {
+                if (vaultState == null) {
                     LoginScreen { username, password ->
                         val vaultFile = VaultUtils.getVaultFile(this, username, password)
                         val v = Vault(password)
@@ -65,15 +69,40 @@ class MainActivity : ComponentActivity() {
                             VaultUtils.saveVaultToFile(this, vaultFile, v.serialize())
                         }
 
+                        // Save current session data
+                        currentUsername = username
+                        currentPassword = password
                         vault = v
+                        vaultState = v
                     }
                 } else {
-                    MainApp(vault!!)
+                    MainApp(vaultState!!)
                 }
             }
         }
     }
+
+    override fun onStop() {
+        super.onStop()
+        saveVaultToDisk()
+    }
+
+    private fun saveVaultToDisk() {
+        val v = vault
+        val username = currentUsername
+        val password = currentPassword
+
+        if (v != null && username != null && password != null) {
+            val vaultFile = VaultUtils.getVaultFile(this, username, password)
+            try {
+                VaultUtils.saveVaultToFile(this, vaultFile, v.serialize())
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 }
+
 
 @Composable
 fun MainApp(vault: Vault) {
