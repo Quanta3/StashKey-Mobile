@@ -2,14 +2,14 @@
 
     import java.io.Serializable;
 
-    public class UserLogin implements Serializable{
+    public class Item implements Serializable{
         private String username;
         private String email;
         private String password;
         private String note;
 
 
-        public UserLogin(String username, String email, String password, String note){
+        public Item(String username, String email, String password, String note){
             this.username = username;
             this.email = email;
             this.password = password;
